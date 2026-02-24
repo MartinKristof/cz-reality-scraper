@@ -1,24 +1,61 @@
 {
-    "title": "CheerioCrawler Template",
+    "title": "CZ Reality Scraper Input",
     "type": "object",
     "schemaVersion": 1,
     "properties": {
-        "startUrls": {
-            "title": "Start URLs",
+        "portals": {
+            "title": "Portals",
             "type": "array",
-            "description": "URLs to start with.",
-            "editor": "requestListSources",
-            "prefill": [
-                {
-                    "url": "https://apify.com"
-                }
-            ]
+            "description": "Which portals to scrape. Allowed values: \"sreality\", \"bezrealitky\".",
+            "editor": "stringList",
+            "default": ["sreality"],
+            "prefill": ["sreality"]
         },
-        "maxRequestsPerCrawl": {
-            "title": "Max Requests per Crawl",
+        "categories": {
+            "title": "Property Categories",
+            "type": "array",
+            "description": "Which property types to scrape. Allowed values: \"domy\", \"byty\", \"pozemky\".",
+            "editor": "stringList",
+            "default": ["domy"],
+            "prefill": ["domy"]
+        },
+        "offerType": {
+            "title": "Offer Type",
+            "type": "string",
+            "description": "Filter by offer type.",
+            "default": "prodej",
+            "enum": ["prodej", "pronajem", "vse"],
+            "enumTitles": ["For sale", "For rent", "All"]
+        },
+        "regions": {
+            "title": "Regions",
+            "type": "array",
+            "description": "Czech regions to filter by (leave empty for all of Czech Republic). Valid values: Praha, Středočeský, Jihočeský, Plzeňský, Karlovarský, Ústecký, Liberecký, Královéhradecký, Pardubický, Vysočina, Jihomoravský, Olomoucký, Zlínský, Moravskoslezský.",
+            "editor": "stringList",
+            "default": [],
+            "prefill": []
+        },
+        "maxPrice": {
+            "title": "Max Price (CZK)",
             "type": "integer",
-            "description": "Maximum number of requests that can be made by this crawler.",
-            "default": 100
+            "description": "Maximum listing price in CZK. Use 0 for no limit.",
+            "default": 0,
+            "minimum": 0
+        },
+        "minArea": {
+            "title": "Min Floor Area (m²)",
+            "type": "integer",
+            "description": "Minimum usable floor area in m². Use 0 for no limit.",
+            "default": 0,
+            "minimum": 0
+        },
+        "maxItems": {
+            "title": "Max Items",
+            "type": "integer",
+            "description": "Maximum total number of listings to scrape across all portals. Use 0 for no limit.",
+            "default": 100,
+            "minimum": 0
         }
-    }
+    },
+    "required": []
 }

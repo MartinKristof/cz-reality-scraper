@@ -5,19 +5,46 @@
         "overview": {
             "title": "Overview",
             "transformation": {
-                "fields": ["title", "url"]
+                "fields": [
+                    "source",
+                    "name",
+                    "price",
+                    "pricePerSqm",
+                    "locality",
+                    "layout",
+                    "floorArea",
+                    "landArea",
+                    "isNew",
+                    "priceChanged",
+                    "previousPrice",
+                    "daysOnMarket",
+                    "isBestDeal",
+                    "lat",
+                    "lon",
+                    "imageUrl",
+                    "url"
+                ]
             },
             "display": {
                 "component": "table",
                 "properties": {
-                    "title": {
-                        "label": "Title",
-                        "format": "text"
-                    },
-                    "url": {
-                        "label": "URL",
-                        "format": "link"
-                    }
+                    "source": { "label": "Source", "format": "text" },
+                    "name": { "label": "Name", "format": "text" },
+                    "price": { "label": "Price (CZK)", "format": "number" },
+                    "pricePerSqm": { "label": "Price/m²", "format": "number" },
+                    "locality": { "label": "Locality", "format": "text" },
+                    "layout": { "label": "Layout", "format": "text" },
+                    "floorArea": { "label": "Floor (m²)", "format": "number" },
+                    "landArea": { "label": "Land (m²)", "format": "number" },
+                    "isNew": { "label": "New", "format": "boolean" },
+                    "priceChanged": { "label": "Price Changed", "format": "boolean" },
+                    "previousPrice": { "label": "Prev. Price", "format": "number" },
+                    "daysOnMarket": { "label": "Days on Market", "format": "number" },
+                    "isBestDeal": { "label": "Best Deal", "format": "boolean" },
+                    "lat": { "label": "Lat", "format": "number" },
+                    "lon": { "label": "Lon", "format": "number" },
+                    "imageUrl": { "label": "Image", "format": "image" },
+                    "url": { "label": "Link", "format": "link" }
                 }
             }
         }

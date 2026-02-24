@@ -1,113 +1,139 @@
-# TypeScript Crawlee & CheerioCrawler Actor Template
+# CZ Reality Scraper — sreality + bezrealitky
 
-<!-- This is an Apify template readme -->
+Scrapes property listings from **sreality.cz** and **bezrealitky.cz**. Supports filtering by portal, category, region, price, and floor area. Tracks price history between runs and flags new listings, price drops, and best deals.
 
-This template example was built with [Crawlee](https://crawlee.dev/) to scrape data from a website using [Cheerio](https://cheerio.js.org/) wrapped into [CheerioCrawler](https://crawlee.dev/api/cheerio-crawler/class/CheerioCrawler).
+## Features
 
-## Quick Start
+- **Two portals** — sreality.cz and bezrealitky.cz in a single run
+- **Categories** — houses (`domy`), flats (`byty`), land (`pozemky`)
+- **Offer types** — for sale, for rent, or both
+- **Region filter** — server-side filtering by any of the 14 Czech regions (no post-processing waste)
+- **Price & area filters** — max price (CZK) and min floor area (m²)
+- **Price history** — stored in key-value store between runs; each listing shows `priceChanged`, `previousPrice`, and `daysOnMarket`
+- **Best deal detection** — `isBestDeal: true` when a listing's price/m² is ≥ 15 % below the median for that run
+- **GPS coordinates** — `lat`/`lon` included where available (sreality)
+- **Image URLs** — full-resolution image link per listing
 
-Once you've installed the dependencies, start the Actor:
+## Input
+
+| Field        | Type       | Default        | Description                                              |
+| ------------ | ---------- | -------------- | -------------------------------------------------------- |
+| `portals`    | `string[]` | `["sreality"]` | Portals to scrape: `"sreality"`, `"bezrealitky"`         |
+| `categories` | `string[]` | `["domy"]`     | Property types: `"domy"`, `"byty"`, `"pozemky"`          |
+| `offerType`  | `string`   | `"prodej"`     | `"prodej"` (sale), `"pronajem"` (rent), `"vse"` (all)    |
+| `regions`    | `string[]` | `[]`           | Czech regions to filter by; empty = whole Czech Republic |
+| `maxPrice`   | `integer`  | `0`            | Max price in CZK; `0` = no limit                         |
+| `minArea`    | `integer`  | `0`            | Min floor area in m²; `0` = no limit                     |
+| `maxItems`   | `integer`  | `100`          | Max total listings across all portals; `0` = no limit    |
+
+### Valid region values
+
+Both short and long forms are accepted (e.g. `"Jihomoravský"` or `"Jihomoravský kraj"`). Multiple regions can be combined.
+
+| Short form        | Long form              |
+| ----------------- | ---------------------- |
+| `Praha`           | —                      |
+| `Středočeský`     | `Středočeský kraj`     |
+| `Jihočeský`       | `Jihočeský kraj`       |
+| `Plzeňský`        | `Plzeňský kraj`        |
+| `Karlovarský`     | `Karlovarský kraj`     |
+| `Ústecký`         | `Ústecký kraj`         |
+| `Liberecký`       | `Liberecký kraj`       |
+| `Královéhradecký` | `Královéhradecký kraj` |
+| `Pardubický`      | `Pardubický kraj`      |
+| `Vysočina`        | `Kraj Vysočina`        |
+| `Jihomoravský`    | `Jihomoravský kraj`    |
+| `Olomoucký`       | `Olomoucký kraj`       |
+| `Zlínský`         | `Zlínský kraj`         |
+| `Moravskoslezský` | `Moravskoslezský kraj` |
+
+### Example input
+
+```json
+{
+    "portals": ["sreality", "bezrealitky"],
+    "categories": ["domy"],
+    "offerType": "prodej",
+    "regions": ["Jihomoravský"],
+    "maxPrice": 8000000,
+    "minArea": 100,
+    "maxItems": 200
+}
+```
+
+## Output
+
+Each item pushed to the dataset:
+
+| Field           | Type           | Description                               |
+| --------------- | -------------- | ----------------------------------------- |
+| `id`            | `string`       | Unique ID, e.g. `sreality_1234567`        |
+| `source`        | `string`       | `"sreality"` or `"bezrealitky"`           |
+| `name`          | `string`       | Listing title                             |
+| `price`         | `number\|null` | Price in CZK                              |
+| `pricePerSqm`   | `number\|null` | Price per m² (rounded)                    |
+| `locality`      | `string`       | Location string                           |
+| `layout`        | `string\|null` | Room layout, e.g. `"4+kk"`                |
+| `floorArea`     | `number\|null` | Usable floor area in m²                   |
+| `landArea`      | `number\|null` | Land area in m² (houses/land)             |
+| `lat`           | `number\|null` | Latitude                                  |
+| `lon`           | `number\|null` | Longitude                                 |
+| `imageUrl`      | `string\|null` | Main listing image URL                    |
+| `url`           | `string`       | Link to the listing                       |
+| `isNew`         | `boolean`      | `true` on first appearance                |
+| `priceChanged`  | `boolean`      | `true` if price changed since last run    |
+| `previousPrice` | `number\|null` | Previous price in CZK                     |
+| `daysOnMarket`  | `number`       | Days since first seen                     |
+| `isBestDeal`    | `boolean`      | `true` if price/m² is ≥ 15 % below median |
+
+### Example output record
+
+```json
+{
+    "id": "sreality_1234567",
+    "source": "sreality",
+    "name": "Prodej rodinného domu 4+kk, 150 m²",
+    "price": 5900000,
+    "pricePerSqm": 39333,
+    "locality": "Brno-Líšeň",
+    "layout": "4+kk",
+    "floorArea": 150,
+    "landArea": 420,
+    "lat": 49.2183,
+    "lon": 16.6512,
+    "imageUrl": "https://d18-a.sdn.cz/d_18/c_img_G_E/abc.jpg?fl=res,800,600,3",
+    "url": "https://www.sreality.cz/detail/prodej/dum/1234567",
+    "isNew": false,
+    "priceChanged": true,
+    "previousPrice": 6200000,
+    "daysOnMarket": 14,
+    "isBestDeal": true
+}
+```
+
+## Local development
 
 ```bash
+# Install dependencies
+npm install
+
+# Run locally (reads input from storage/key_value_stores/default/INPUT.json)
 apify run
-```
 
-Once your Actor is ready, you can push it to the Apify Console:
+# Run tests
+npm test
 
-```bash
-apify login # first, you need to log in if you haven't already done so
-
-apify push
-```
-
-## Project Structure
-
-```text
-.actor/
-├── actor.json # Actor config: name, version, env vars, runtime settings
-├── dataset_schema.json # Structure and representation of data produced by an Actor
-├── input_schema.json # Input validation & Console form definition
-└── output_schema.json # Specifies where an Actor stores its output
-src/
-└── main.ts # Actor entry point and orchestrator
-storage/ # Local storage (mirrors Cloud during development)
-├── datasets/ # Output items (JSON objects)
-├── key_value_stores/ # Files, config, INPUT
-└── request_queues/ # Pending crawl requests
-Dockerfile # Container image definition
-```
-
-For more information, see the [Actor definition](https://docs.apify.com/platform/actors/development/actor-definition) documentation.
-
-## How it works
-
-This code is a TypeScript script that uses Cheerio to scrape data from a website. It then stores the website titles in a dataset.
-
-- The crawler starts with URLs provided from the input `startUrls` field defined by the input schema. Number of scraped pages is limited by `maxPagesPerCrawl` field from the input schema.
-- The crawler uses `requestHandler` for each URL to extract the data from the page with the Cheerio library and to save the title and URL of each page to the dataset. It also logs out each result that is being saved.
-
-## What's included
-
-- **[Apify SDK](https://docs.apify.com/sdk/js)** - toolkit for building [Actors](https://apify.com/actors)
-- **[Crawlee](https://crawlee.dev/)** - web scraping and browser automation library
-- **[Input schema](https://docs.apify.com/platform/actors/development/input-schema)** - define and easily validate a schema for your Actor's input
-- **[Dataset](https://docs.apify.com/sdk/python/docs/concepts/storages#working-with-datasets)** - store structured data where each object stored has the same attributes
-- **[Cheerio](https://cheerio.js.org/)** - a fast, flexible & elegant library for parsing and manipulating HTML and XML
-- **[Proxy configuration](https://docs.apify.com/platform/proxy)** - rotate IP addresses to prevent blocking
-
-## Resources
-
-- [Quick Start](https://docs.apify.com/platform/actors/development/quick-start) guide for building your first Actor
-- [Video tutorial](https://www.youtube.com/watch?v=yTRHomGg9uQ) on building a scraper using CheerioCrawler
-- [Written tutorial](https://docs.apify.com/academy/web-scraping-for-beginners/challenge) on building a scraper using CheerioCrawler
-- [Web scraping with Cheerio in 2023](https://blog.apify.com/web-scraping-with-cheerio/)
-- How to [scrape a dynamic page](https://blog.apify.com/what-is-a-dynamic-page/) using Cheerio
-- [Integration with Zapier](https://apify.com/integrations), Make, Google Drive and others
-- [Video guide on getting data using Apify API](https://www.youtube.com/watch?v=ViYYDHSBAKM)
-
-## Creating Actors with templates
-
-[How to create Apify Actors with web scraping code templates](https://www.youtube.com/watch?v=u-i-Korzf8w)
-
-
-## Getting started
-
-For complete information [see this article](https://docs.apify.com/platform/actors/development#build-actor-locally). To run the Actor use the following command:
-
-```bash
-apify run
+# Build TypeScript
+npm run build
 ```
 
 ## Deploy to Apify
 
-### Connect Git repository to Apify
+```bash
+apify login   # authenticate with your Apify account
+apify push    # build and deploy to the Apify platform
+```
 
-If you've created a Git repository for the project, you can easily connect to Apify:
+## Scheduling tip
 
-1. Go to [Actor creation page](https://console.apify.com/actors/new)
-2. Click on **Link Git Repository** button
-
-### Push project on your local machine to Apify
-
-You can also deploy the project on your local machine to Apify without the need for the Git repository.
-
-1. Log in to Apify. You will need to provide your [Apify API Token](https://console.apify.com/account/integrations) to complete this action.
-
-    ```bash
-    apify login
-    ```
-
-2. Deploy your Actor. This command will deploy and build the Actor on the Apify Platform. You can find your newly created Actor under [Actors -> My Actors](https://console.apify.com/actors?tab=my).
-
-    ```bash
-    apify push
-    ```
-
-## Documentation reference
-
-To learn more about Apify and Actors, take a look at the following resources:
-
-- [Apify SDK for JavaScript documentation](https://docs.apify.com/sdk/js)
-- [Apify SDK for Python documentation](https://docs.apify.com/sdk/python)
-- [Apify Platform documentation](https://docs.apify.com/platform)
-- [Join our developer community on Discord](https://discord.com/invite/jyEM2PRvMU)
+Run this Actor on a daily or weekly schedule to benefit from price history tracking. On each run, the Actor loads the previous run's history from the key-value store, computes `priceChanged` and `daysOnMarket`, and saves updated history back — so the longer you run it, the richer the data.

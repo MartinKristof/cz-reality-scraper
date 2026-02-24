@@ -1,18 +1,18 @@
 {
-	"actorSpecification": 1,
-	"name": "sreality-scraper",
-	"title": "Project Cheerio Crawler Typescript",
-	"description": "Crawlee and Cheerio project in typescript.",
-	"version": "0.0",
-	"buildTag": "latest",
-	"meta": {
-		"templateId": "ts-crawlee-cheerio",
-		"generatedBy": "<FILL-IN-MODEL>"
-	},
-	"input": "./input_schema.json",
-	"output": "./output_schema.json",
-	"storages": {
-		"dataset": "./dataset_schema.json"
-	},
-	"dockerfile": "../Dockerfile"
+    "actorSpecification": 1,
+    "name": "cz-reality-scraper",
+    "title": "CZ Reality Scraper — sreality + bezrealitky",
+    "description": "Scrapes property listings from sreality.cz and bezrealitky.cz. Supports filtering by portal, category (domy/byty/pozemky), region, price and area. Tracks price history between runs and flags new listings, price drops and best deals.",
+    "version": "0.0",
+    "buildTag": "latest",
+    "meta": {
+        "templateId": "ts-crawlee-cheerio",
+        "generatedBy": "Claude Code with Claude Sonnet 4.6"
+    },
+    "input": "./input_schema.json",
+    "output": "./output_schema.json",
+    "storages": {
+        "dataset": "./dataset_schema.json"
+    },
+    "dockerfile": "../Dockerfile"
 }
