@@ -4,7 +4,7 @@
 FROM apify/actor-node:22 AS builder
 
 # Check preinstalled packages
-RUN npm ls @crawlee/core apify puppeteer playwright
+RUN npm ls apify crawlee
 
 # Copy just package.json and package-lock.json
 # to speed up the build using Docker layer cache.
@@ -25,7 +25,7 @@ RUN npm run build
 FROM apify/actor-node:22
 
 # Check preinstalled packages
-RUN npm ls @crawlee/core apify puppeteer playwright
+RUN npm ls apify crawlee
 
 # Copy just package.json and package-lock.json
 # to speed up the build using Docker layer cache.
@@ -53,4 +53,4 @@ COPY --from=builder --chown=myuser:myuser /usr/src/app/dist ./dist
 COPY --chown=myuser:myuser . ./
 
 # Run the image.
-CMD ["node", "dist/main.js"]
+CMD ["node", "dist/src/main.js"]

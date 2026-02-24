@@ -1,24 +1,135 @@
 {
-    "title": "CheerioCrawler Template",
+    "title": "CZ Reality Scraper Input",
     "type": "object",
     "schemaVersion": 1,
     "properties": {
-        "startUrls": {
-            "title": "Start URLs",
+        "portals": {
+            "title": "Portals",
             "type": "array",
-            "description": "URLs to start with.",
-            "editor": "requestListSources",
-            "prefill": [
-                {
-                    "url": "https://apify.com"
-                }
-            ]
+            "description": "Which portals to scrape.",
+            "editor": "select",
+            "default": ["sreality"],
+            "prefill": ["sreality"],
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+                "type": "string",
+                "enum": ["sreality", "bezrealitky"],
+                "enumTitles": ["Sreality.cz", "Bezrealitky.cz"]
+            }
         },
-        "maxRequestsPerCrawl": {
-            "title": "Max Requests per Crawl",
+        "categories": {
+            "title": "Property Categories",
+            "type": "array",
+            "description": "Which property types to scrape.",
+            "editor": "select",
+            "default": ["domy"],
+            "prefill": ["domy"],
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+                "type": "string",
+                "enum": ["domy", "byty", "pozemky"],
+                "enumTitles": ["Houses", "Apartments", "Land"]
+            }
+        },
+        "offerType": {
+            "title": "Offer Type",
+            "type": "string",
+            "description": "Filter by offer type.",
+            "default": "prodej",
+            "enum": ["prodej", "pronajem", "vse"],
+            "enumTitles": ["For sale", "For rent", "All"]
+        },
+        "regions": {
+            "title": "Regions",
+            "type": "array",
+            "description": "Czech regions to filter by (leave empty for all of Czech Republic).",
+            "editor": "select",
+            "default": [],
+            "prefill": [],
+            "uniqueItems": true,
+            "items": {
+                "type": "string",
+                "enum": [
+                    "Praha",
+                    "Středočeský",
+                    "Jihočeský",
+                    "Plzeňský",
+                    "Karlovarský",
+                    "Ústecký",
+                    "Liberecký",
+                    "Královéhradecký",
+                    "Pardubický",
+                    "Vysočina",
+                    "Jihomoravský",
+                    "Olomoucký",
+                    "Zlínský",
+                    "Moravskoslezský"
+                ],
+                "enumTitles": [
+                    "Praha",
+                    "Středočeský kraj",
+                    "Jihočeský kraj",
+                    "Plzeňský kraj",
+                    "Karlovarský kraj",
+                    "Ústecký kraj",
+                    "Liberecký kraj",
+                    "Královéhradecký kraj",
+                    "Pardubický kraj",
+                    "Kraj Vysočina",
+                    "Jihomoravský kraj",
+                    "Olomoucký kraj",
+                    "Zlínský kraj",
+                    "Moravskoslezský kraj"
+                ]
+            }
+        },
+        "maxPrice": {
+            "title": "Max Price (CZK)",
             "type": "integer",
-            "description": "Maximum number of requests that can be made by this crawler.",
-            "default": 100
+            "nullable": true,
+            "description": "Maximum listing price in CZK. Leave empty for no limit.",
+            "minimum": 0
+        },
+        "minArea": {
+            "title": "Min Floor Area (m²)",
+            "type": "integer",
+            "nullable": true,
+            "description": "Minimum usable floor area in m². Leave empty for no limit.",
+            "minimum": 0
+        },
+        "maxItems": {
+            "title": "Max Items",
+            "type": "integer",
+            "nullable": true,
+            "description": "Maximum total number of listings to scrape across all portals. Leave empty for no limit.",
+            "default": 100,
+            "minimum": 0
+        },
+        "maxConcurrency": {
+            "title": "Max Concurrency",
+            "type": "integer",
+            "description": "Maximum number of concurrent HTTP requests per portal crawler.",
+            "default": 5,
+            "minimum": 1,
+            "maximum": 50
+        },
+        "historyStoreId": {
+            "title": "History Store ID",
+            "type": "string",
+            "description": "Name of a persistent (named) Apify key-value store used to track listing history across runs. Leave empty to disable cross-run history (each run starts fresh).",
+            "editor": "textfield",
+            "default": ""
+        },
+        "bestDealThreshold": {
+            "title": "Best Deal Threshold",
+            "type": "number",
+            "description": "A listing is flagged as a best deal when its price/m² is at or below this fraction of the run median. Default 0.85 means ≥ 15 % below median. Lower values (e.g. 0.75) are stricter; higher values (e.g. 0.90) flag more listings.",
+            "default": 0.85,
+            "minimum": 0.01,
+            "maximum": 0.99
         }
-    }
+    },
+    "required": []
 }
