@@ -1,6 +1,6 @@
 {
     "actorOutputSchemaVersion": 1,
-    "title": "Output schema of the files scraper",
+    "title": "Output schema of the CZ Reality Scraper",
     "properties": {
         "overview": {
             "type": "string",
