@@ -1,0 +1,41 @@
+{
+    "name": "cz-reality-scraper",
+    "version": "1.0.0",
+    "type": "module",
+    "description": "Apify Actor that scrapes property listings from sreality.cz and bezrealitky.cz with price history tracking.",
+    "engines": {
+        "node": ">=22.0.0"
+    },
+    "dependencies": {
+        "apify": "^3.5.2",
+        "crawlee": "^3.16.0"
+    },
+    "devDependencies": {
+        "@apify/eslint-config": "^1.0.0",
+        "@apify/tsconfig": "^0.1.1",
+        "@types/node": "^22.15.32",
+        "eslint": "^9.29.0",
+        "eslint-config-prettier": "^10.1.5",
+        "eslint-plugin-prettier": "^5.5.5",
+        "globals": "^17.0.0",
+        "prettier": "^3.5.3",
+        "tsx": "^4.20.3",
+        "typescript": "^5.9.3",
+        "typescript-eslint": "^8.34.1",
+        "vitest": "^4.0.18"
+    },
+    "scripts": {
+        "start": "npm run start:dev",
+        "start:prod": "node dist/src/main.js",
+        "start:dev": "tsx --env-file .env src/main.ts",
+        "build": "tsc",
+        "lint": "eslint",
+        "lint:fix": "eslint --fix",
+        "format": "prettier --write .",
+        "format:check": "prettier --check .",
+        "test": "vitest run",
+        "qa": "npm run lint && npm run format:check && npm run test"
+    },
+    "author": "Martin Krištof",
+    "license": "MIT"
+}

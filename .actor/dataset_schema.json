@@ -1,0 +1,78 @@
+{
+    "actorSpecification": 1,
+    "fields": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "properties": {
+            "id": { "type": "string" },
+            "source": { "type": "string", "enum": ["sreality", "bezrealitky"] },
+            "category": { "type": "string", "enum": ["domy", "byty", "pozemky"] },
+            "name": { "type": "string" },
+            "price": { "type": ["number", "null"] },
+            "pricePerSqm": { "type": ["number", "null"] },
+            "locality": { "type": "string" },
+            "layout": { "type": ["string", "null"] },
+            "floorArea": { "type": ["number", "null"] },
+            "landArea": { "type": ["number", "null"] },
+            "lat": { "type": ["number", "null"] },
+            "lon": { "type": ["number", "null"] },
+            "imageUrl": { "type": ["string", "null"], "format": "uri" },
+            "url": { "type": "string", "format": "uri" },
+            "isNew": { "type": "boolean" },
+            "priceChanged": { "type": "boolean" },
+            "previousPrice": { "type": ["number", "null"] },
+            "daysTracked": { "type": "number", "minimum": 0 },
+            "priceToMedianRatio": { "type": ["number", "null"] }
+        }
+    },
+    "views": {
+        "overview": {
+            "title": "Overview",
+            "transformation": {
+                "fields": [
+                    "source",
+                    "category",
+                    "name",
+                    "price",
+                    "pricePerSqm",
+                    "locality",
+                    "layout",
+                    "floorArea",
+                    "landArea",
+                    "isNew",
+                    "priceChanged",
+                    "previousPrice",
+                    "daysTracked",
+                    "priceToMedianRatio",
+                    "lat",
+                    "lon",
+                    "imageUrl",
+                    "url"
+                ]
+            },
+            "display": {
+                "component": "table",
+                "properties": {
+                    "source": { "label": "Source", "format": "text" },
+                    "category": { "label": "Category", "format": "text" },
+                    "name": { "label": "Name", "format": "text" },
+                    "price": { "label": "Price (CZK)", "format": "number" },
+                    "pricePerSqm": { "label": "Price/m²", "format": "number" },
+                    "locality": { "label": "Locality", "format": "text" },
+                    "layout": { "label": "Layout", "format": "text" },
+                    "floorArea": { "label": "Floor (m²)", "format": "number" },
+                    "landArea": { "label": "Land (m²)", "format": "number" },
+                    "isNew": { "label": "New", "format": "boolean" },
+                    "priceChanged": { "label": "Price Changed", "format": "boolean" },
+                    "previousPrice": { "label": "Prev. Price", "format": "number" },
+                    "daysTracked": { "label": "Days on Market", "format": "number" },
+                    "priceToMedianRatio": { "label": "Price/Median", "format": "number" },
+                    "lat": { "label": "Lat", "format": "number" },
+                    "lon": { "label": "Lon", "format": "number" },
+                    "imageUrl": { "label": "Image", "format": "image" },
+                    "url": { "label": "Link", "format": "link" }
+                }
+            }
+        }
+    }
+}

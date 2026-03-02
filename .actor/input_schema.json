@@ -1,0 +1,128 @@
+{
+    "title": "CZ Reality Scraper Input",
+    "type": "object",
+    "schemaVersion": 1,
+    "properties": {
+        "portals": {
+            "title": "Portals",
+            "type": "array",
+            "description": "Which portals to scrape.",
+            "editor": "select",
+            "default": ["sreality"],
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+                "type": "string",
+                "enum": ["sreality", "bezrealitky"],
+                "enumTitles": ["Sreality.cz", "Bezrealitky.cz"]
+            }
+        },
+        "categories": {
+            "title": "Property Categories",
+            "type": "array",
+            "description": "Which property types to scrape.",
+            "editor": "select",
+            "default": ["domy"],
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+                "type": "string",
+                "enum": ["domy", "byty", "pozemky"],
+                "enumTitles": ["Domy (Houses)", "Byty (Apartments)", "Pozemky (Land)"]
+            }
+        },
+        "offerType": {
+            "title": "Offer Type",
+            "type": "array",
+            "description": "Filter by offer type. Select one or both.",
+            "editor": "select",
+            "default": ["prodej"],
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+                "type": "string",
+                "enum": ["prodej", "pronajem"],
+                "enumTitles": ["Prodej (For sale)", "Pronajem (For rent)"]
+            }
+        },
+        "regions": {
+            "title": "Regions",
+            "type": "array",
+            "description": "Czech regions to filter by. Leave empty to scrape all of Czech Republic.",
+            "editor": "select",
+            "default": [],
+            "uniqueItems": true,
+            "items": {
+                "type": "string",
+                "enum": [
+                    "Praha",
+                    "Středočeský",
+                    "Jihočeský",
+                    "Plzeňský",
+                    "Karlovarský",
+                    "Ústecký",
+                    "Liberecký",
+                    "Královéhradecký",
+                    "Pardubický",
+                    "Vysočina",
+                    "Jihomoravský",
+                    "Olomoucký",
+                    "Zlínský",
+                    "Moravskoslezský"
+                ],
+                "enumTitles": [
+                    "Praha",
+                    "Středočeský kraj",
+                    "Jihočeský kraj",
+                    "Plzeňský kraj",
+                    "Karlovarský kraj",
+                    "Ústecký kraj",
+                    "Liberecký kraj",
+                    "Královéhradecký kraj",
+                    "Pardubický kraj",
+                    "Kraj Vysočina",
+                    "Jihomoravský kraj",
+                    "Olomoucký kraj",
+                    "Zlínský kraj",
+                    "Moravskoslezský kraj"
+                ]
+            }
+        },
+        "maxPrice": {
+            "title": "Max Price (CZK)",
+            "type": "integer",
+            "nullable": true,
+            "description": "Maximum listing price in CZK. Leave empty for no limit.",
+            "minimum": 1
+        },
+        "minArea": {
+            "title": "Min Floor Area (m²)",
+            "type": "integer",
+            "nullable": true,
+            "description": "Minimum usable floor area in m². Leave empty for no limit.",
+            "minimum": 1
+        },
+        "maxListings": {
+            "title": "Max Listings",
+            "type": "integer",
+            "nullable": true,
+            "description": "Maximum number of listings to scrape per portal. Leave empty for no limit.",
+            "default": 100,
+            "minimum": 1
+        },
+        "enableHistory": {
+            "title": "Enable Price History",
+            "type": "boolean",
+            "description": "Track listing history across runs — detect new listings, price changes, and compute price-to-median ratio. Charged per enriched listing.",
+            "default": false
+        },
+        "historyStoreId": {
+            "title": "History Store ID",
+            "type": "string",
+            "description": "Name of a persistent (named) Apify key-value store used to store history across runs. Only used when Enable Price History is on. Use a fixed name to preserve history between runs (e.g. 'cz-reality-history'). Leave empty to use the built-in 'HISTORY' store.",
+            "editor": "textfield",
+            "default": "cz-reality-history"
+        }
+    },
+    "required": []
+}
