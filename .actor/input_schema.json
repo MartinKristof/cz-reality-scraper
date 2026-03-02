@@ -33,23 +33,28 @@
         },
         "offerType": {
             "title": "Offer Type",
-            "type": "string",
-            "description": "Filter by offer type.",
-            "default": "prodej",
-            "enum": ["prodej", "pronajem", "vse"],
-            "enumTitles": ["Prodej (For sale)", "Pronajem (For rent)", "Vše (All)"]
+            "type": "array",
+            "description": "Filter by offer type. Select one or both.",
+            "editor": "select",
+            "default": ["prodej"],
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+                "type": "string",
+                "enum": ["prodej", "pronajem"],
+                "enumTitles": ["Prodej (For sale)", "Pronajem (For rent)"]
+            }
         },
         "regions": {
             "title": "Regions",
             "type": "array",
-            "description": "Czech regions to filter by. Select specific regions or leave 'Vše' selected to scrape all of Czech Republic.",
+            "description": "Czech regions to filter by. Leave empty to scrape all of Czech Republic.",
             "editor": "select",
-            "default": ["vse"],
+            "default": [],
             "uniqueItems": true,
             "items": {
                 "type": "string",
                 "enum": [
-                    "vse",
                     "Praha",
                     "Středočeský",
                     "Jihočeský",
@@ -66,7 +71,6 @@
                     "Moravskoslezský"
                 ],
                 "enumTitles": [
-                    "Vše (Whole country)",
                     "Praha",
                     "Středočeský kraj",
                     "Jihočeský kraj",
@@ -118,13 +122,6 @@
             "description": "Name of a persistent (named) Apify key-value store used to store history across runs. Only used when Enable Price History is on. Use a fixed name to preserve history between runs (e.g. 'cz-reality-history'). Leave empty to use the built-in 'HISTORY' store.",
             "editor": "textfield",
             "default": "cz-reality-history"
-        },
-        "proxyConfiguration": {
-            "title": "Proxy Configuration",
-            "type": "object",
-            "description": "Proxy settings for avoiding bot detection. Recommended for production runs.",
-            "editor": "proxy",
-            "default": { "useApifyProxy": true }
         }
     },
     "required": []

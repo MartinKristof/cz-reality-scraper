@@ -1,17 +1,11 @@
 import { setTimeout } from 'node:timers/promises';
 
-import { Actor, log } from 'apify';
-import { gotScraping, HttpCrawler, type RequestOptions } from 'crawlee';
+import { log } from 'apify';
+import { HttpCrawler, type HttpCrawlingContext, type RequestOptions } from 'crawlee';
 
 import { MAX_CONCURRENCY, PAGE_DELAY_MS } from '../constants.js';
 import type { Category, Input, Listing, OfferType } from '../types.js';
-import {
-    buildRegionLookup,
-    calcPricePerSqm,
-    expandOfferTypes,
-    normalizeRegions,
-    warnInvalidRegions,
-} from '../utils.js';
+import { buildRegionLookup, calcPricePerSqm, createTieredProxyConfig, warnInvalidRegions } from '../utils.js';
 
 const PER_PAGE = 20;
 const AREA_MAX = 1_000_000; // 1 000 000 m² upper bound for usable_area filter (covers any land plot)
@@ -76,13 +70,10 @@ interface DetailResult {
     landArea: number | null;
 }
 
-const fetchDetail = async (hashId: number, proxyUrl?: string): Promise<DetailResult> => {
+const fetchDetail = async (hashId: number, sendRequest: HttpCrawlingContext['sendRequest']): Promise<DetailResult> => {
     try {
-        const { body: data } = (await gotScraping({
-            url: `${DETAIL_API}/${hashId}`,
-            responseType: 'json',
-            proxyUrl,
-        })) as { body: Record<string, unknown> };
+        const response = await sendRequest({ url: `${DETAIL_API}/${hashId}` });
+        const data = JSON.parse(response.body.toString()) as Record<string, unknown>;
         const items = (Array.isArray(data.items) ? (data.items as unknown[]).flat() : []) as {
             name: string;
             value: string | number;
@@ -123,7 +114,7 @@ const buildListingUrl = (category: Category, offerType: OfferType, page: number,
     if (input.minArea != null) {
         params.set('usable_area', `${input.minArea}|${AREA_MAX}`);
     }
-    for (const region of normalizeRegions(input.regions)) {
+    for (const region of input.regions) {
         const regionId = REGION_IDS[region];
         if (regionId) params.append('locality_region_id', String(regionId));
     }
@@ -132,10 +123,8 @@ const buildListingUrl = (category: Category, offerType: OfferType, page: number,
 
 export const scrapeSreality = async (input: Input, maxListings: number): Promise<Listing[]> => {
     const results: Listing[] = [];
-    const offerTypes = expandOfferTypes(input.offerType);
-    const proxyConfiguration = await Actor.createProxyConfiguration(
-        input.proxyConfiguration ?? { useApifyProxy: true },
-    );
+    const offerTypes = input.offerType;
+    const proxyConfiguration = await createTieredProxyConfig();
 
     warnInvalidRegions(input.regions, REGION_IDS, LOG_PREFIX);
 
@@ -154,7 +143,7 @@ export const scrapeSreality = async (input: Input, maxListings: number): Promise
         maxConcurrency: MAX_CONCURRENCY,
         requestHandlerTimeoutSecs: 120,
         additionalMimeTypes: ['application/hal+json'],
-        async requestHandler({ request, body, crawler: crawlerInstance }) {
+        async requestHandler({ request, body, crawler: crawlerInstance, sendRequest }) {
             if (results.length >= maxListings) return;
 
             const { category, offerType, page } = request.userData as ListingPageUserData;
@@ -182,8 +171,7 @@ export const scrapeSreality = async (input: Input, maxListings: number): Promise
                 estatesSlice.map(async (estate) => {
                     const { name, price, locality, hash_id: hashId, gps, _links: links } = estate;
                     const rawImage = links?.images?.[0]?.href ?? null;
-                    const detailProxyUrl = await proxyConfiguration?.newUrl(String(hashId));
-                    const { layout, floorArea, landArea } = await fetchDetail(hashId, detailProxyUrl);
+                    const { layout, floorArea, landArea } = await fetchDetail(hashId, sendRequest);
                     const pricePerSqm = calcPricePerSqm(price, floorArea);
 
                     results.push({
@@ -222,7 +210,8 @@ export const scrapeSreality = async (input: Input, maxListings: number): Promise
 
     await crawler.run(startRequests);
 
-    log.info(`${LOG_PREFIX} Done. Scraped ${results.length} listings.`);
+    const capped = results.slice(0, maxListings);
+    log.info(`${LOG_PREFIX} Done. Scraped ${capped.length} listings.`);
 
-    return results;
+    return capped;
 };

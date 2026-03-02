@@ -1,27 +1,7 @@
 import { log } from 'apify';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import {
-    buildRegionLookup,
-    calcPricePerSqm,
-    expandOfferTypes,
-    normalizeRegions,
-    warnInvalidRegions,
-} from '../utils.js';
-
-describe('expandOfferTypes', () => {
-    it("should expand 'vse' to both offer types", () => {
-        expect(expandOfferTypes('vse')).toEqual(['prodej', 'pronajem']);
-    });
-
-    it("should wrap 'prodej' in an array", () => {
-        expect(expandOfferTypes('prodej')).toEqual(['prodej']);
-    });
-
-    it("should wrap 'pronajem' in an array", () => {
-        expect(expandOfferTypes('pronajem')).toEqual(['pronajem']);
-    });
-});
+import { buildRegionLookup, calcPricePerSqm, warnInvalidRegions } from '../utils.js';
 
 describe('calcPricePerSqm', () => {
     it('should calculate and round price per sqm', () => {
@@ -77,24 +57,6 @@ describe('buildRegionLookup', () => {
     });
 });
 
-describe('normalizeRegions', () => {
-    it("should filter out 'vse' sentinel", () => {
-        expect(normalizeRegions(['vse'])).toEqual([]);
-    });
-
-    it("should filter out 'vse' when mixed with real regions", () => {
-        expect(normalizeRegions(['vse', 'Praha'])).toEqual(['Praha']);
-    });
-
-    it('should return regions unchanged when no sentinel present', () => {
-        expect(normalizeRegions(['Praha', 'Jihočeský'])).toEqual(['Praha', 'Jihočeský']);
-    });
-
-    it('should return empty array unchanged', () => {
-        expect(normalizeRegions([])).toEqual([]);
-    });
-});
-
 describe('warnInvalidRegions', () => {
     beforeEach(() => {
         vi.spyOn(log, 'warning').mockReturnValue(undefined);
@@ -106,12 +68,6 @@ describe('warnInvalidRegions', () => {
 
     it('should not warn when regions array is empty', () => {
         warnInvalidRegions([], { Praha: 10 }, '[test]');
-
-        expect(log.warning).not.toHaveBeenCalled();
-    });
-
-    it("should not warn when regions contains only the 'vse' sentinel", () => {
-        warnInvalidRegions(['vse'], {}, '[test]');
 
         expect(log.warning).not.toHaveBeenCalled();
     });

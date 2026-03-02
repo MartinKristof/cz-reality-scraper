@@ -1,15 +1,9 @@
-import { Actor, log } from 'apify';
+import { log } from 'apify';
 import { CheerioCrawler, type RequestOptions } from 'crawlee';
 
 import { MAX_CONCURRENCY } from '../constants.js';
 import type { Category, Input, Listing, OfferType } from '../types.js';
-import {
-    buildRegionLookup,
-    calcPricePerSqm,
-    expandOfferTypes,
-    normalizeRegions,
-    warnInvalidRegions,
-} from '../utils.js';
+import { buildRegionLookup, calcPricePerSqm, createTieredProxyConfig, warnInvalidRegions } from '../utils.js';
 
 // Bezrealitky.cz is a Next.js SSR app.
 // Listing data is embedded in <script id="__NEXT_DATA__"> as an Apollo cache JSON — no Playwright needed.
@@ -73,8 +67,8 @@ interface PageData {
 }
 
 interface PageUserData {
-    category: string;
-    offerType: string;
+    category: Category;
+    offerType: OfferType;
     estateSlug: string;
     offerSlug: string;
     regionSlug: string | undefined;
@@ -209,8 +203,8 @@ const buildPageUrl = (offerSlug: string, estateSlug: string, regionSlug: string 
 
 export const scrapeBezrealitky = async (input: Input, maxListings: number): Promise<Listing[]> => {
     const results: Listing[] = [];
-    const offerTypes = expandOfferTypes(input.offerType);
-    const normalizedRegions = normalizeRegions(input.regions);
+    const offerTypes = input.offerType;
+    const normalizedRegions = input.regions;
     const regionSlugs =
         normalizedRegions.length > 0
             ? normalizedRegions
@@ -240,9 +234,7 @@ export const scrapeBezrealitky = async (input: Input, maxListings: number): Prom
         }
     }
 
-    const proxyConfiguration = await Actor.createProxyConfiguration(
-        input.proxyConfiguration ?? { useApifyProxy: true },
-    );
+    const proxyConfiguration = await createTieredProxyConfig();
 
     const crawler = new CheerioCrawler({
         proxyConfiguration,
@@ -272,7 +264,7 @@ export const scrapeBezrealitky = async (input: Input, maxListings: number): Prom
                 );
             }
 
-            collectPageListings(pageData, input, category as Category, offerSlug, estateSlug, maxListings, results);
+            collectPageListings(pageData, input, category, offerSlug, estateSlug, maxListings, results);
 
             const shouldOpenNextPage = pageData.totalCount > page * PAGE_SIZE && results.length < maxListings;
             if (shouldOpenNextPage) {
