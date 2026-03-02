@@ -5,9 +5,13 @@ import type { OfferType } from './types.js';
 export const expandOfferTypes = (offerType: OfferType): OfferType[] =>
     offerType === 'vse' ? ['prodej', 'pronajem'] : [offerType];
 
+/** Strips the "vse" sentinel value so scrapers always receive a plain list of region names. */
+export const normalizeRegions = (regions: string[]): string[] => regions.filter((r) => r !== 'vse');
+
 export const warnInvalidRegions = (regions: string[], regionMap: Record<string, unknown>, logPrefix: string): void => {
-    if (regions.length === 0) return;
-    const invalid = regions.filter((region) => !regionMap[region]);
+    const normalized = normalizeRegions(regions);
+    if (normalized.length === 0) return;
+    const invalid = normalized.filter((region) => !regionMap[region]);
     if (invalid.length > 0) {
         log.warning(`${logPrefix} Ignoring unrecognised region names: ${invalid.join(', ')}`);
     }
@@ -48,10 +52,3 @@ export const calcPricePerSqm = (
     price: number | null | undefined,
     floorArea: number | null | undefined,
 ): number | null => (price && floorArea ? Math.round(price / floorArea) : null);
-
-export const calcPerPortal = (maxItems: number | null, portalCount: number): number => {
-    if (portalCount <= 0) return 0;
-    if (maxItems === null) return Infinity;
-
-    return Math.ceil(maxItems / portalCount);
-};

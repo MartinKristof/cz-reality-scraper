@@ -27,7 +27,7 @@
     "scripts": {
         "start": "npm run start:dev",
         "start:prod": "node dist/src/main.js",
-        "start:dev": "tsx src/main.ts",
+        "start:dev": "tsx --env-file .env src/main.ts",
         "build": "tsc",
         "lint": "eslint",
         "lint:fix": "eslint --fix",

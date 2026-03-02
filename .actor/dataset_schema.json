@@ -22,20 +22,8 @@
             "priceChanged": { "type": "boolean" },
             "previousPrice": { "type": ["number", "null"] },
             "daysTracked": { "type": "number", "minimum": 0 },
-            "isBestDeal": { "type": "boolean" }
-        },
-        "required": [
-            "id",
-            "source",
-            "category",
-            "name",
-            "locality",
-            "url",
-            "isNew",
-            "priceChanged",
-            "daysTracked",
-            "isBestDeal"
-        ]
+            "priceToMedianRatio": { "type": ["number", "null"] }
+        }
     },
     "views": {
         "overview": {
@@ -55,7 +43,7 @@
                     "priceChanged",
                     "previousPrice",
                     "daysTracked",
-                    "isBestDeal",
+                    "priceToMedianRatio",
                     "lat",
                     "lon",
                     "imageUrl",
@@ -78,7 +66,7 @@
                     "priceChanged": { "label": "Price Changed", "format": "boolean" },
                     "previousPrice": { "label": "Prev. Price", "format": "number" },
                     "daysTracked": { "label": "Days on Market", "format": "number" },
-                    "isBestDeal": { "label": "Best Deal", "format": "boolean" },
+                    "priceToMedianRatio": { "label": "Price/Median", "format": "number" },
                     "lat": { "label": "Lat", "format": "number" },
                     "lon": { "label": "Lon", "format": "number" },
                     "imageUrl": { "label": "Image", "format": "image" },

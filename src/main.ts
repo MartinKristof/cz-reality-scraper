@@ -2,11 +2,9 @@ import { setTimeout } from 'node:timers/promises';
 
 import { Actor, log } from 'apify';
 
-import { INPUT_DEFAULTS } from './constants.js';
 import { enrich, loadHistory, logEnrichStats, saveHistory } from './history.js';
 import { scrapeAll } from './portals.js';
-import type { Input } from './types.js';
-import { calcPerPortal } from './utils.js';
+import type { EnrichedListing, HistoryStore, Input } from './types.js';
 
 await Actor.init();
 
@@ -17,66 +15,42 @@ Actor.on('aborting', async () => {
     await Actor.exit();
 });
 
-const {
-    portals = INPUT_DEFAULTS.portals,
-    categories = INPUT_DEFAULTS.categories,
-    offerType = INPUT_DEFAULTS.offerType,
-    regions = INPUT_DEFAULTS.regions,
-    maxPrice = INPUT_DEFAULTS.maxPrice,
-    minArea = INPUT_DEFAULTS.minArea,
-    maxItems = INPUT_DEFAULTS.maxItems,
-    maxConcurrency = INPUT_DEFAULTS.maxConcurrency,
-    historyStoreId,
-    bestDealThreshold = INPUT_DEFAULTS.bestDealThreshold,
-} = (await Actor.getInput<Input>()) ?? ({} as Input);
+const input = await Actor.getInputOrThrow<Input>();
 
 log.info('Starting CZ Reality Scraper', {
-    portals,
-    categories,
-    offerType,
-    regions,
-    maxPrice,
-    minArea,
-    maxItems,
-    maxConcurrency,
+    portals: input.portals,
+    categories: input.categories,
+    offerType: input.offerType,
+    regions: input.regions,
+    maxPrice: input.maxPrice,
+    minArea: input.minArea,
+    maxListings: input.maxListings,
+    enableHistory: input.enableHistory,
 });
 
-if (portals.length === 0) {
-    const message = 'Input validation error: "portals" must contain at least one portal.';
-    log.error(message, { portals });
+const historyStore = input.enableHistory ? await Actor.openKeyValueStore(input.historyStoreId || undefined) : null;
+let history: HistoryStore = historyStore ? await loadHistory(historyStore) : {};
+const allEnriched: EnrichedListing[] = [];
+let totalSaved = 0;
 
-    throw new Error(message);
+await scrapeAll(input, async (listings) => {
+    if (historyStore) {
+        const { enriched, updatedHistory } = enrich(listings, history);
+        history = updatedHistory;
+        allEnriched.push(...enriched);
+        await Actor.charge({ eventName: 'listing-enriched', count: enriched.length });
+        await Actor.pushData(enriched);
+        totalSaved += enriched.length;
+    } else {
+        await Actor.pushData(listings);
+        totalSaved += listings.length;
+    }
+});
+
+if (historyStore) {
+    logEnrichStats(allEnriched);
+    await saveHistory(historyStore, history);
 }
-if (categories.length === 0) {
-    const message = 'Input validation error: "categories" must contain at least one category.';
-    log.error(message, { categories });
 
-    throw new Error(message);
-}
-
-const input: Input = {
-    portals,
-    categories,
-    offerType,
-    regions,
-    maxPrice,
-    minArea,
-    maxItems,
-    maxConcurrency,
-    historyStoreId,
-    bestDealThreshold,
-};
-const perPortal = calcPerPortal(maxItems, portals.length);
-
-const allListings = await scrapeAll(input, perPortal);
-
-const historyStore = await Actor.openKeyValueStore(historyStoreId || undefined);
-const history = await loadHistory(historyStore);
-const { enriched, updatedHistory } = enrich(allListings, history, bestDealThreshold);
-logEnrichStats(enriched);
-
-await Actor.pushData(enriched);
-await saveHistory(historyStore, updatedHistory);
-
-log.info(`Done. Saved ${enriched.length} listings.`);
+log.info(`Done. Saved ${totalSaved} listings.`);
 await Actor.exit();

@@ -1,8 +1,15 @@
-import { log } from 'apify';
-import { CheerioCrawler } from 'crawlee';
+import { Actor, log } from 'apify';
+import { CheerioCrawler, type RequestOptions } from 'crawlee';
 
+import { MAX_CONCURRENCY } from '../constants.js';
 import type { Category, Input, Listing, OfferType } from '../types.js';
-import { buildRegionLookup, calcPricePerSqm, expandOfferTypes, warnInvalidRegions } from '../utils.js';
+import {
+    buildRegionLookup,
+    calcPricePerSqm,
+    expandOfferTypes,
+    normalizeRegions,
+    warnInvalidRegions,
+} from '../utils.js';
 
 // Bezrealitky.cz is a Next.js SSR app.
 // Listing data is embedded in <script id="__NEXT_DATA__"> as an Apollo cache JSON — no Playwright needed.
@@ -143,17 +150,19 @@ const advertToListing = (
     offerSlug: string,
     estateSlug: string,
 ): Listing | null => {
-    const { id: advertId, price, surface, surfaceLand, disposition, uri: rawUri, gps } = advert;
+    const { id: advertId, price, surface, surfaceLand, disposition, uri: rawUrlPath, gps } = advert;
+    const maxPrice = input.maxPrice ?? Infinity;
+    const minArea = input.minArea ?? 0;
 
-    if (input.maxPrice != null && price != null && price > input.maxPrice) return null;
+    if (price != null && price > maxPrice) return null;
 
     const floorArea = surface && surface > 0 ? surface : null;
-    if (input.minArea != null && (floorArea == null || floorArea < input.minArea)) return null;
+    if (minArea > 0 && (floorArea == null || floorArea < minArea)) return null;
 
     const pricePerSqm = calcPricePerSqm(price, floorArea);
     const locality = (findByPrefix(advert, 'address') as string | undefined) ?? '';
     const id = advertId ?? refKey.replace('Advert:', '');
-    const uri = typeof rawUri === 'string' ? rawUri : undefined;
+    const urlPath = typeof rawUrlPath === 'string' ? rawUrlPath : undefined;
 
     return {
         id: `${SOURCE}_${category}_${id}`,
@@ -169,7 +178,7 @@ const advertToListing = (
         lat: gps?.lat ?? null,
         lon: gps?.lng ?? null,
         imageUrl: resolveImage(advert, apolloState),
-        url: uri ? `${BASE_URL}/${uri}` : `${BASE_URL}${buildListingPath(offerSlug, estateSlug)}`,
+        url: urlPath ? `${BASE_URL}/${urlPath}` : `${BASE_URL}${buildListingPath(offerSlug, estateSlug)}`,
     };
 };
 
@@ -179,11 +188,11 @@ const collectPageListings = (
     category: Category,
     offerSlug: string,
     estateSlug: string,
-    maxItems: number,
+    maxListings: number,
     results: Listing[],
 ): void => {
     for (const ref of pageData.list) {
-        if (results.length >= maxItems) break;
+        if (results.length >= maxListings) break;
         const { __ref: refKey } = ref;
         if (!refKey) continue;
 
@@ -198,12 +207,13 @@ const collectPageListings = (
 const buildPageUrl = (offerSlug: string, estateSlug: string, regionSlug: string | undefined, page: number): string =>
     `${BASE_URL}${buildListingPath(offerSlug, estateSlug, regionSlug)}?page=${page}`;
 
-export const scrapeBezrealitky = async (input: Input, maxItems: number): Promise<Listing[]> => {
+export const scrapeBezrealitky = async (input: Input, maxListings: number): Promise<Listing[]> => {
     const results: Listing[] = [];
     const offerTypes = expandOfferTypes(input.offerType);
+    const normalizedRegions = normalizeRegions(input.regions);
     const regionSlugs =
-        input.regions.length > 0
-            ? input.regions
+        normalizedRegions.length > 0
+            ? normalizedRegions
                   .map((regionName) => REGION_SLUGS[regionName])
                   .filter((slug): slug is string => slug !== undefined)
             : [undefined];
@@ -214,7 +224,7 @@ export const scrapeBezrealitky = async (input: Input, maxItems: number): Promise
         return results;
     }
 
-    const startRequests: { url: string; userData: PageUserData }[] = [];
+    const startRequests: RequestOptions<PageUserData>[] = [];
     for (const category of input.categories) {
         const estateSlug = ESTATE_TYPE[category];
         if (!estateSlug) continue;
@@ -230,10 +240,15 @@ export const scrapeBezrealitky = async (input: Input, maxItems: number): Promise
         }
     }
 
+    const proxyConfiguration = await Actor.createProxyConfiguration(
+        input.proxyConfiguration ?? { useApifyProxy: true },
+    );
+
     const crawler = new CheerioCrawler({
-        maxConcurrency: input.maxConcurrency,
+        proxyConfiguration,
+        maxConcurrency: MAX_CONCURRENCY,
         async requestHandler({ request, $, crawler: crawlerInstance }) {
-            if (results.length >= maxItems) return;
+            if (results.length >= maxListings) return;
 
             const { category, offerType, estateSlug, offerSlug, regionSlug, page } = request.userData as PageUserData;
             const regionLabel = regionSlug ?? 'all';
@@ -257,16 +272,16 @@ export const scrapeBezrealitky = async (input: Input, maxItems: number): Promise
                 );
             }
 
-            collectPageListings(pageData, input, category as Category, offerSlug, estateSlug, maxItems, results);
+            collectPageListings(pageData, input, category as Category, offerSlug, estateSlug, maxListings, results);
 
-            const hasMore = pageData.totalCount > page * PAGE_SIZE && results.length < maxItems;
-            if (hasMore) {
+            const shouldOpenNextPage = pageData.totalCount > page * PAGE_SIZE && results.length < maxListings;
+            if (shouldOpenNextPage) {
                 const nextPage = page + 1;
                 await crawlerInstance.addRequests([
                     {
                         url: buildPageUrl(offerSlug, estateSlug, regionSlug, nextPage),
                         userData: { category, offerType, estateSlug, offerSlug, regionSlug, page: nextPage },
-                    },
+                    } as RequestOptions<PageUserData>,
                 ]);
             }
         },
@@ -274,7 +289,7 @@ export const scrapeBezrealitky = async (input: Input, maxItems: number): Promise
 
     await crawler.run(startRequests);
 
-    const capped = results.slice(0, maxItems);
+    const capped = results.slice(0, maxListings);
     log.info(`${LOG_PREFIX} Done. Scraped ${capped.length} listings.`);
 
     return capped;

@@ -1,7 +1,13 @@
 import { log } from 'apify';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { buildRegionLookup, calcPerPortal, calcPricePerSqm, expandOfferTypes, warnInvalidRegions } from '../utils.js';
+import {
+    buildRegionLookup,
+    calcPricePerSqm,
+    expandOfferTypes,
+    normalizeRegions,
+    warnInvalidRegions,
+} from '../utils.js';
 
 describe('expandOfferTypes', () => {
     it("should expand 'vse' to both offer types", () => {
@@ -76,6 +82,24 @@ describe('buildRegionLookup', () => {
     });
 });
 
+describe('normalizeRegions', () => {
+    it("should filter out 'vse' sentinel", () => {
+        expect(normalizeRegions(['vse'])).toEqual([]);
+    });
+
+    it("should filter out 'vse' when mixed with real regions", () => {
+        expect(normalizeRegions(['vse', 'Praha'])).toEqual(['Praha']);
+    });
+
+    it('should return regions unchanged when no sentinel present', () => {
+        expect(normalizeRegions(['Praha', 'Jihočeský'])).toEqual(['Praha', 'Jihočeský']);
+    });
+
+    it('should return empty array unchanged', () => {
+        expect(normalizeRegions([])).toEqual([]);
+    });
+});
+
 describe('warnInvalidRegions', () => {
     beforeEach(() => {
         vi.spyOn(log, 'warning').mockReturnValue(undefined);
@@ -87,6 +111,12 @@ describe('warnInvalidRegions', () => {
 
     it('should not warn when regions array is empty', () => {
         warnInvalidRegions([], { Praha: 10 }, '[test]');
+
+        expect(log.warning).not.toHaveBeenCalled();
+    });
+
+    it("should not warn when regions contains only the 'vse' sentinel", () => {
+        warnInvalidRegions(['vse'], {}, '[test]');
 
         expect(log.warning).not.toHaveBeenCalled();
     });
@@ -107,35 +137,5 @@ describe('warnInvalidRegions', () => {
         warnInvalidRegions(['Bad1', 'Bad2'], {}, '[test]');
 
         expect(log.warning).toHaveBeenCalledWith('[test] Ignoring unrecognised region names: Bad1, Bad2');
-    });
-});
-
-describe('calcPerPortal', () => {
-    it('should distribute evenly across portals', () => {
-        expect(calcPerPortal(100, 2)).toBe(50);
-    });
-
-    it('should round up when not evenly divisible', () => {
-        expect(calcPerPortal(100, 3)).toBe(34);
-    });
-
-    it('should return Infinity when maxItems is null (no limit)', () => {
-        expect(calcPerPortal(null, 2)).toBe(Infinity);
-    });
-
-    it('should return Infinity for a single portal with no limit', () => {
-        expect(calcPerPortal(null, 1)).toBe(Infinity);
-    });
-
-    it('should handle a single portal', () => {
-        expect(calcPerPortal(50, 1)).toBe(50);
-    });
-
-    it('should return 0 when portalCount is 0', () => {
-        expect(calcPerPortal(100, 0)).toBe(0);
-    });
-
-    it('should return 0 when portalCount is negative', () => {
-        expect(calcPerPortal(100, -1)).toBe(0);
     });
 });

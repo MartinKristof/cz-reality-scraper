@@ -14,12 +14,10 @@ export const saveHistory = async (store: KeyValueStore, history: HistoryStore): 
 export const enrich = (
     listings: Listing[],
     history: HistoryStore,
-    bestDealThreshold: number,
 ): { enriched: EnrichedListing[]; updatedHistory: HistoryStore } => {
     const now = new Date().toISOString();
     const updatedHistory: HistoryStore = { ...history };
 
-    // Global median pricePerSqm for isBestDeal (15% below median = good deal)
     const validPrices = listings
         .map(({ pricePerSqm }) => pricePerSqm)
         .filter((price): price is number => price !== null)
@@ -38,6 +36,8 @@ export const enrich = (
         const firstSeen = new Date(prev?.firstSeenAt ?? now);
         const daysTracked = Math.floor((Date.now() - firstSeen.getTime()) / 86_400_000);
         const priceChanged = prev != null && prev.price !== price;
+        const priceToMedianRatio =
+            median !== null && pricePerSqm !== null ? Math.round((pricePerSqm / median) * 100) / 100 : null;
 
         return {
             ...listing,
@@ -45,7 +45,7 @@ export const enrich = (
             priceChanged,
             previousPrice: priceChanged ? (prev?.price ?? null) : null,
             daysTracked,
-            isBestDeal: median !== null && pricePerSqm !== null && pricePerSqm <= median * bestDealThreshold,
+            priceToMedianRatio,
         };
     });
 
@@ -58,7 +58,6 @@ export const logEnrichStats = (enriched: EnrichedListing[]): void => {
         ({ priceChanged, previousPrice, price }) =>
             priceChanged && previousPrice != null && price != null && price < previousPrice,
     ).length;
-    const bestDealCount = enriched.filter(({ isBestDeal }) => isBestDeal).length;
 
-    log.info('History stats', { newListings: newCount, priceDrops: priceDropCount, bestDeals: bestDealCount });
+    log.info('History stats', { newListings: newCount, priceDrops: priceDropCount });
 };

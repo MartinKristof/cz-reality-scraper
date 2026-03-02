@@ -2,17 +2,24 @@ export type Portal = 'sreality' | 'bezrealitky';
 export type Category = 'domy' | 'byty' | 'pozemky';
 export type OfferType = 'prodej' | 'pronajem' | 'vse';
 
+export interface ProxyInput {
+    useApifyProxy?: boolean;
+    apifyProxyGroups?: string[];
+    apifyProxyCountry?: string;
+    proxyUrls?: string[];
+}
+
 export interface Input {
     portals: Portal[];
     categories: Category[];
     offerType: OfferType;
     regions: string[];
-    maxPrice: number | null; // null = no limit
-    minArea: number | null; // null = no limit
-    maxItems: number | null; // null = no limit
-    maxConcurrency: number;
-    historyStoreId?: string; // named KV store for cross-run history persistence
-    bestDealThreshold: number; // price/m² ≤ this fraction of run median → isBestDeal
+    maxPrice?: number | null; // undefined/null = no limit
+    minArea?: number | null; // undefined/null = no limit
+    maxListings?: number | null; // undefined/null = no limit
+    enableHistory?: boolean; // enable cross-run price history tracking (PPE charged)
+    historyStoreId?: string; // optional: custom named KV store for history persistence
+    proxyConfiguration?: ProxyInput;
 }
 
 export interface Listing {
@@ -37,7 +44,7 @@ export interface EnrichedListing extends Listing {
     priceChanged: boolean;
     previousPrice: number | null;
     daysTracked: number;
-    isBestDeal: boolean;
+    priceToMedianRatio: number | null;
 }
 
 export interface HistoryEntry {

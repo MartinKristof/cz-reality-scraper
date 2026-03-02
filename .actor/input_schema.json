@@ -9,7 +9,6 @@
             "description": "Which portals to scrape.",
             "editor": "select",
             "default": ["sreality"],
-            "prefill": ["sreality"],
             "minItems": 1,
             "uniqueItems": true,
             "items": {
@@ -24,13 +23,12 @@
             "description": "Which property types to scrape.",
             "editor": "select",
             "default": ["domy"],
-            "prefill": ["domy"],
             "minItems": 1,
             "uniqueItems": true,
             "items": {
                 "type": "string",
                 "enum": ["domy", "byty", "pozemky"],
-                "enumTitles": ["Houses", "Apartments", "Land"]
+                "enumTitles": ["Domy (Houses)", "Byty (Apartments)", "Pozemky (Land)"]
             }
         },
         "offerType": {
@@ -39,19 +37,19 @@
             "description": "Filter by offer type.",
             "default": "prodej",
             "enum": ["prodej", "pronajem", "vse"],
-            "enumTitles": ["For sale", "For rent", "All"]
+            "enumTitles": ["Prodej (For sale)", "Pronajem (For rent)", "Vše (All)"]
         },
         "regions": {
             "title": "Regions",
             "type": "array",
-            "description": "Czech regions to filter by (leave empty for all of Czech Republic).",
+            "description": "Czech regions to filter by. Select specific regions or leave 'Vše' selected to scrape all of Czech Republic.",
             "editor": "select",
-            "default": [],
-            "prefill": [],
+            "default": ["vse"],
             "uniqueItems": true,
             "items": {
                 "type": "string",
                 "enum": [
+                    "vse",
                     "Praha",
                     "Středočeský",
                     "Jihočeský",
@@ -68,6 +66,7 @@
                     "Moravskoslezský"
                 ],
                 "enumTitles": [
+                    "Vše (Whole country)",
                     "Praha",
                     "Středočeský kraj",
                     "Jihočeský kraj",
@@ -90,45 +89,42 @@
             "type": "integer",
             "nullable": true,
             "description": "Maximum listing price in CZK. Leave empty for no limit.",
-            "minimum": 0
+            "minimum": 1
         },
         "minArea": {
             "title": "Min Floor Area (m²)",
             "type": "integer",
             "nullable": true,
             "description": "Minimum usable floor area in m². Leave empty for no limit.",
-            "minimum": 0
+            "minimum": 1
         },
-        "maxItems": {
-            "title": "Max Items",
+        "maxListings": {
+            "title": "Max Listings",
             "type": "integer",
             "nullable": true,
-            "description": "Maximum total number of listings to scrape across all portals. Leave empty for no limit.",
+            "description": "Maximum number of listings to scrape per portal. Leave empty for no limit.",
             "default": 100,
-            "minimum": 0
+            "minimum": 1
         },
-        "maxConcurrency": {
-            "title": "Max Concurrency",
-            "type": "integer",
-            "description": "Maximum number of concurrent HTTP requests per portal crawler.",
-            "default": 5,
-            "minimum": 1,
-            "maximum": 50
+        "enableHistory": {
+            "title": "Enable Price History",
+            "type": "boolean",
+            "description": "Track listing history across runs — detect new listings, price changes, and compute price-to-median ratio. Charged per enriched listing.",
+            "default": false
         },
         "historyStoreId": {
             "title": "History Store ID",
             "type": "string",
-            "description": "Name of a persistent (named) Apify key-value store used to track listing history across runs. Leave empty to disable cross-run history (each run starts fresh).",
+            "description": "Name of a persistent (named) Apify key-value store used to store history across runs. Only used when Enable Price History is on. Leave empty to use the default store.",
             "editor": "textfield",
             "default": ""
         },
-        "bestDealThreshold": {
-            "title": "Best Deal Threshold",
-            "type": "number",
-            "description": "A listing is flagged as a best deal when its price/m² is at or below this fraction of the run median. Default 0.85 means ≥ 15 % below median. Lower values (e.g. 0.75) are stricter; higher values (e.g. 0.90) flag more listings.",
-            "default": 0.85,
-            "minimum": 0.01,
-            "maximum": 0.99
+        "proxyConfiguration": {
+            "title": "Proxy Configuration",
+            "type": "object",
+            "description": "Proxy settings for avoiding bot detection. Recommended for production runs.",
+            "editor": "proxy",
+            "default": { "useApifyProxy": true }
         }
     },
     "required": []

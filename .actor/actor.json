@@ -14,5 +14,17 @@
     "storages": {
         "dataset": "./dataset_schema.json"
     },
-    "dockerfile": "../Dockerfile"
+    "dockerfile": "../Dockerfile",
+    "pricingModel": {
+        "type": "PAY_PER_EVENT",
+        "pricingPerEvent": {
+            "actorChargeEvents": {
+                "listing-enriched": {
+                    "eventTitle": "Enriched listing",
+                    "eventDescription": "Charged once per listing when price history tracking is enabled",
+                    "eventPriceUsd": 0.001
+                }
+            }
+        }
+    }
 }
