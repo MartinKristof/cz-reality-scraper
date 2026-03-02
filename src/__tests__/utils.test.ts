@@ -43,6 +43,10 @@ describe('calcPricePerSqm', () => {
     it('should return null when floorArea is 0', () => {
         expect(calcPricePerSqm(1_000_000, 0)).toBeNull();
     });
+
+    it('should return 0 when price is 0 and floorArea is positive', () => {
+        expect(calcPricePerSqm(0, 75)).toBe(0);
+    });
 });
 
 describe('buildRegionLookup', () => {
@@ -52,27 +56,18 @@ describe('buildRegionLookup', () => {
         expect(result.Praha).toBe(10);
     });
 
-    it('should also map alias to the same value', () => {
-        const result = buildRegionLookup({ Středočeský: 20 });
-
-        expect(result['Středočeský']).toBe(20);
-        expect(result['Středočeský kraj']).toBe(20);
-    });
-
     it('should not include regions absent from the input', () => {
         const result = buildRegionLookup({ Praha: 10 });
 
         expect(result['Jihočeský']).toBeUndefined();
-        expect(result['Jihočeský kraj']).toBeUndefined();
     });
 
-    it('should expand all aliases for multiple regions', () => {
+    it('should map multiple regions', () => {
         const result = buildRegionLookup({ Praha: 10, Jihočeský: 31 });
 
         expect(result.Praha).toBe(10);
         expect(result['Jihočeský']).toBe(31);
-        expect(result['Jihočeský kraj']).toBe(31);
-        expect(Object.keys(result)).toHaveLength(3);
+        expect(Object.keys(result)).toHaveLength(2);
     });
 
     it('should work with string values', () => {

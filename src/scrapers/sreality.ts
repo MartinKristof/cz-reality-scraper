@@ -25,19 +25,19 @@ const CATEGORY_SLUG: Record<Category, string> = { byty: 'byt', domy: 'dum', poze
 
 const REGION_IDS: Record<string, number> = buildRegionLookup({
     Praha: 10,
-    Středočeský: 20,
-    Jihočeský: 31,
-    Plzeňský: 32,
-    Karlovarský: 41,
-    Ústecký: 42,
-    Liberecký: 51,
-    Královéhradecký: 52,
-    Pardubický: 53,
-    Vysočina: 63,
-    Jihomoravský: 64,
-    Olomoucký: 71,
-    Zlínský: 72,
-    Moravskoslezský: 80,
+    Středočeský: 11,
+    Jihočeský: 1,
+    Plzeňský: 2,
+    Karlovarský: 3,
+    Ústecký: 4,
+    Liberecký: 5,
+    Královéhradecký: 6,
+    Pardubický: 7,
+    Vysočina: 13,
+    Jihomoravský: 14,
+    Olomoucký: 8,
+    Zlínský: 9,
+    Moravskoslezský: 12,
 });
 
 interface ListingPageUserData {
