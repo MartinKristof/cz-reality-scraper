@@ -6,6 +6,9 @@
 # Install dependencies
 npm install
 
+# Set up local environment variables (copy and fill in your Apify token)
+cp .env.example .env
+
 # Run locally (reads input from storage/key_value_stores/default/INPUT.json)
 apify run
 
