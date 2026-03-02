@@ -152,6 +152,7 @@ export const scrapeSreality = async (input: Input, maxListings: number): Promise
     const crawler = new HttpCrawler({
         proxyConfiguration,
         maxConcurrency: MAX_CONCURRENCY,
+        requestHandlerTimeoutSecs: 120,
         additionalMimeTypes: ['application/hal+json'],
         async requestHandler({ request, body, crawler: crawlerInstance }) {
             if (results.length >= maxListings) return;
@@ -174,32 +175,35 @@ export const scrapeSreality = async (input: Input, maxListings: number): Promise
                 return;
             }
 
-            for (const estate of estates) {
-                if (results.length >= maxListings) break;
+            const remaining = maxListings - results.length;
+            const estatesSlice = estates.slice(0, remaining);
 
-                const { name, price, locality, hash_id: hashId, gps, _links: links } = estate;
-                const rawImage = links?.images?.[0]?.href ?? null;
-                const detailProxyUrl = await proxyConfiguration?.newUrl(String(hashId));
-                const { layout, floorArea, landArea } = await fetchDetail(hashId, detailProxyUrl);
-                const pricePerSqm = calcPricePerSqm(price, floorArea);
+            await Promise.all(
+                estatesSlice.map(async (estate) => {
+                    const { name, price, locality, hash_id: hashId, gps, _links: links } = estate;
+                    const rawImage = links?.images?.[0]?.href ?? null;
+                    const detailProxyUrl = await proxyConfiguration?.newUrl(String(hashId));
+                    const { layout, floorArea, landArea } = await fetchDetail(hashId, detailProxyUrl);
+                    const pricePerSqm = calcPricePerSqm(price, floorArea);
 
-                results.push({
-                    id: `${SOURCE}_${category}_${hashId}`,
-                    source: SOURCE,
-                    category,
-                    name: name ?? '',
-                    price: price ?? null,
-                    pricePerSqm,
-                    locality: locality ?? '',
-                    layout,
-                    floorArea,
-                    landArea,
-                    lat: gps?.lat ?? null,
-                    lon: gps?.lon ?? null,
-                    imageUrl: rawImage ?? null,
-                    url: `https://www.sreality.cz/detail/${offerType}/${CATEGORY_SLUG[category]}/${hashId}`,
-                });
-            }
+                    results.push({
+                        id: `${SOURCE}_${category}_${hashId}`,
+                        source: SOURCE,
+                        category,
+                        name: name ?? '',
+                        price: price ?? null,
+                        pricePerSqm,
+                        locality: locality ?? '',
+                        layout,
+                        floorArea,
+                        landArea,
+                        lat: gps?.lat ?? null,
+                        lon: gps?.lon ?? null,
+                        imageUrl: rawImage ?? null,
+                        url: `https://www.sreality.cz/detail/${offerType}/${CATEGORY_SLUG[category]}/${hashId}`,
+                    });
+                }),
+            );
 
             const shouldOpenNextPage = (data.result_size ?? 0) > (page + 1) * PER_PAGE && results.length < maxListings;
             if (shouldOpenNextPage) {
