@@ -28,7 +28,7 @@ log.info('Starting CZ Reality Scraper', {
     enableHistory: input.enableHistory,
 });
 
-const historyStore = input.enableHistory ? await Actor.openKeyValueStore(input.historyStoreId || undefined) : null;
+const historyStore = input.enableHistory ? await Actor.openKeyValueStore(input.historyStoreId || 'HISTORY') : null;
 let history: HistoryStore = historyStore ? await loadHistory(historyStore) : {};
 const allEnriched: EnrichedListing[] = [];
 let totalSaved = 0;

@@ -115,9 +115,9 @@
         "historyStoreId": {
             "title": "History Store ID",
             "type": "string",
-            "description": "Name of a persistent (named) Apify key-value store used to store history across runs. Only used when Enable Price History is on. Leave empty to use the default store.",
+            "description": "Name of a persistent (named) Apify key-value store used to store history across runs. Only used when Enable Price History is on. Use a fixed name to preserve history between runs (e.g. 'cz-reality-history'). Leave empty to use the built-in 'HISTORY' store.",
             "editor": "textfield",
-            "default": ""
+            "default": "cz-reality-history"
         },
         "proxyConfiguration": {
             "title": "Proxy Configuration",
