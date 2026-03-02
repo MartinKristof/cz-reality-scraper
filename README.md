@@ -35,7 +35,7 @@ Here are some ways people use this Czech real estate scraper:
 
 Scraping sreality.cz and bezrealitky.cz with this Actor requires no coding:
 
-1. Click **Try for free** on the [Actor's Apify Store page](https://apify.com/TODO/cz-reality-scraper).
+1. Click **Try for free** on the [Actor's Apify Store page](https://apify.com/martas_kristof/cz-reality-scraper).
 2. Select the **portals** you want to scrape (sreality.cz, bezrealitky.cz, or both).
 3. Choose **property categories** (houses, apartments, land) and **offer type** (for sale, for rent, or both).
 4. Optionally filter by **region**, **max price (CZK)**, or **min floor area (m²)**.
@@ -60,11 +60,11 @@ If you need higher volumes or continuous scheduling, check out the [Apify pricin
 
 ## Input
 
-See the **Input** tab on the [Actor's Apify Store page](https://apify.com/TODO/cz-reality-scraper/input-schema) for the full reference with descriptions and defaults.
+See the **Input** tab on the [Actor's Apify Store page](https://apify.com/martas_kristof/cz-reality-scraper/input-schema) for the full reference with descriptions and defaults.
 
 ## Output
 
-Each scraped listing is stored as a JSON record in the Apify Dataset and can be exported to **JSON, CSV, Excel, XML, or RSS**. See the **Output** tab on the [Actor's Apify Store page](https://apify.com/TODO/cz-reality-scraper) for the full field reference.
+Each scraped listing is stored as a JSON record in the Apify Dataset and can be exported to **JSON, CSV, Excel, XML, or RSS**. See the **Output** tab on the [Actor's Apify Store page](https://apify.com/martas_kristof/cz-reality-scraper) for the full field reference.
 
 ### Example output record
 
