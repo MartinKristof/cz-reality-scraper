@@ -107,7 +107,7 @@
             "type": "integer",
             "nullable": true,
             "description": "Maximum number of listings to scrape per portal. Leave empty for no limit.",
-            "default": 100,
+            "default": 20,
             "minimum": 1
         },
         "enableHistory": {

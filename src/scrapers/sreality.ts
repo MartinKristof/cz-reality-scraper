@@ -59,7 +59,7 @@ export const parseArea = (value: string | number | undefined): number | null => 
     if (value == null) return null;
     const num = Number.parseFloat(
         String(value)
-            .replace(',', '.')
+            .replaceAll(',', '.')
             .replace(/[^\d.]/g, ''),
     );
     return Number.isNaN(num) ? null : num;
@@ -73,7 +73,10 @@ interface DetailResult {
 
 const fetchDetail = async (hashId: number, sendRequest: HttpCrawlingContext['sendRequest']): Promise<DetailResult> => {
     try {
-        const response = await sendRequest({ url: `${DETAIL_API}/${hashId}` });
+        const response = await sendRequest({
+            url: `${DETAIL_API}/${hashId}`,
+            headers: { Accept: 'application/json, application/hal+json' },
+        });
         const data = JSON.parse(response.body.toString()) as Record<string, unknown>;
         const items = (Array.isArray(data.items) ? (data.items as unknown[]).flat() : []) as {
             name: string;
